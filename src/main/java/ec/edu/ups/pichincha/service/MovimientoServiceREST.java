@@ -13,7 +13,6 @@ import javax.ws.rs.QueryParam;
 
 import ec.edu.ups.pichincha.modelo.Cuenta;
 import ec.edu.ups.pichincha.modelo.Movimiento;
-import ec.edu.ups.pichincha.modelo.Transferencia;
 import ec.edu.ups.pichincha.negocio.MovimientoONLocal;
 
 @Path("movimientos")
@@ -23,11 +22,6 @@ public class MovimientoServiceREST {
 	private MovimientoONLocal onMovimiento;
 
 	private Cuenta cuenta = new Cuenta();
-	private Cuenta cuentaO = new Cuenta();
-	private Cuenta cuentaD = new Cuenta();
-	private Movimiento deposito = new Movimiento();
-	private Movimiento retiro = new Movimiento();
-
 	@GET
 	@Produces("application/json")
 	@Path("cuenta")
@@ -53,52 +47,27 @@ public class MovimientoServiceREST {
 	@POST
 	@Produces("application/json")
 	@Consumes("application/json")
-	@Path("transferencia")
-	public Mensaje transferencia(Transferencia transferencia) {
+	@Path("deposito")
+	public Mensaje insertDeposito(Movimiento movimiento) {
 		Mensaje mensaje = new Mensaje();
-		cuentaO = new Cuenta();
-		cuentaD = new Cuenta();
-		deposito = new Movimiento();
-		retiro = new Movimiento();
-
+		cuenta = new Cuenta();
 		try {
 			Date fecha;
-			transferencia.setTransferenciaId(onMovimiento.transferenciaN());
-			transferencia.setFechaTransferencia(fecha = new Date());
-			
-			cuentaO = onMovimiento.cuenta(transferencia.getCuentaOrigen().getNumeroCuenta());
-			cuentaD = onMovimiento.cuenta(transferencia.getCuentaDestino().getNumeroCuenta());
-			
-			cuentaD.setSaldo((cuentaD.getSaldo() + transferencia.getMonto()));
-			cuentaO.setSaldo((cuentaO.getSaldo() - transferencia.getMonto()));
-			
-			deposito.setMovimientoId(onMovimiento.movimientoN());
-			deposito.setTipoMovimiento("DEPOSITO");
-			deposito.setCantidad(transferencia.getMonto());
-			deposito.setFecha(fecha =  new Date());
-			deposito.setSaldo(cuentaD.getSaldo());
-			deposito.setCuenta(onMovimiento.cuenta(transferencia.getCuentaDestino().getNumeroCuenta()));
-			onMovimiento.movimiento(deposito);
-			
-			retiro.setMovimientoId(onMovimiento.movimientoN());
-			retiro.setTipoMovimiento("RETIRO");
-			retiro.setCantidad(transferencia.getMonto());
-			retiro.setFecha(fecha =  new Date());
-			retiro.setSaldo(cuentaO.getSaldo());
-			retiro.setCuenta(onMovimiento.cuenta(transferencia.getCuentaOrigen().getNumeroCuenta()));
-			onMovimiento.movimiento(retiro);
+			movimiento.setMovimientoId(onMovimiento.movimientoN());
+			movimiento.setTipoMovimiento("DEPOSITO");
+			movimiento.setFecha(fecha = new Date());
 
+			cuenta = onMovimiento.cuenta(movimiento.getCuenta().getNumeroCuenta());
+			cuenta.setSaldo((cuenta.getSaldo() + movimiento.getCantidad()));
 			
-			onMovimiento.actualizarCuenta(cuentaD);
-			onMovimiento.actualizarCuenta(cuentaO);
+			movimiento.setSaldo(cuenta.getSaldo());
+			movimiento.setCuenta(cuenta);
 			
-			transferencia.setCuentaDestino(cuentaD);
-			transferencia.setCuentaOrigen(cuentaO);
-			
-			onMovimiento.crearTransferencia(transferencia);
+			onMovimiento.movimiento(movimiento);
+			onMovimiento.actualizarCuenta(cuenta);
 
 			mensaje.setCode("OK");
-			mensaje.setMessage("Transferencia realizado");
+			mensaje.setMessage("Deposito realizado");
 			return mensaje;
 
 		} catch (Exception e) {
@@ -110,4 +79,37 @@ public class MovimientoServiceREST {
 		}
 	}
 
+	@POST
+	@Produces("application/json")
+	@Consumes("application/json")
+	@Path("retiro")
+	public Mensaje insertRetiro(Movimiento movimiento) {
+		Mensaje mensaje = new Mensaje();
+		cuenta = new Cuenta();
+		try {
+			Date fecha;
+			movimiento.setMovimientoId(onMovimiento.movimientoN());
+			movimiento.setTipoMovimiento("RETIRO");
+			movimiento.setFecha(fecha = new Date());
+
+			cuenta = onMovimiento.cuenta(movimiento.getCuenta().getNumeroCuenta());
+			cuenta.setSaldo((cuenta.getSaldo() - movimiento.getCantidad()));
+			
+			movimiento.setSaldo(cuenta.getSaldo());
+			movimiento.setCuenta(cuenta);
+			
+			onMovimiento.actualizarCuenta(cuenta);
+			onMovimiento.movimiento(movimiento);
+			
+			mensaje.setCode("OK");
+			mensaje.setMessage("Retiro realizado");
+			return mensaje;
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			mensaje.setCode("ERROR");
+			mensaje.setMessage(e.getMessage());
+			return mensaje;
+		}
+	}
 }
