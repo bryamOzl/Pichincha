@@ -11,16 +11,15 @@ import ec.edu.ups.pichincha.modelo.Cuenta;
 import ec.edu.ups.pichincha.modelo.Movimiento;
 
 @Stateless
-public class MovimientoON implements MovimientoONLocal{
+public class MovimientoON implements MovimientoONLocal {
 
 	@Inject
 	private MovimientoDAO daoMovimiento;
 
 	@Inject
 	private CuentaDAO cuentaDAO;
-	
-	
-	//private TransferenciaDAO transferenciaDAO;
+
+	// private TransferenciaDAO transferenciaDAO;
 
 	private Cuenta cuenta = new Cuenta();
 
@@ -40,26 +39,44 @@ public class MovimientoON implements MovimientoONLocal{
 		int id = daoMovimiento.contarMovimiento();
 		return id;
 	}
-	
-	/*public int transferenciaN() throws SQLException {
-		int id = transferenciaDAO.contarTransferencia();
-		return id;
-	}*/
 
-	public Cuenta cuenta(String nCuenta) throws SQLException {
-		cuenta = cuentaDAO.buscarCuenta(nCuenta);
-		System.out.println(cuenta);
+	/*
+	 * public int transferenciaN() throws SQLException { int id =
+	 * transferenciaDAO.contarTransferencia(); return id; }
+	 */
+
+	/*
+	 * public Cuenta cuenta(String nCuenta) throws SQLException { cuenta =
+	 * cuentaDAO.buscarCuenta(nCuenta); System.out.println(cuenta); return cuenta; }
+	 */
+
+	public Cuenta cuenta(String nCuenta) {
+		// System.out.println(cuenta);
+		// return cuenta;
+		cuenta = new Cuenta();
+		try {
+			cuenta = cuentaDAO.buscarCuenta(nCuenta);
+			System.out.println(cuenta);
+		} catch (SQLException e) {
+			// TODO: handle exception
+			cuenta.setEntidadFinanciera("NO EXISTE");
+			cuenta.setCuentaId(0);
+			cuenta.setNumeroCuenta("0000000003");
+			cuenta.setSaldo(0.0);
+			System.out.println(cuenta);
+		}
 		return cuenta;
 	}
-	
+
 	public boolean actualizarCuenta(Cuenta cuenta) throws SQLException {
 		cuentaDAO.update(cuenta);
 		return true;
 	}
 
-	/*public boolean crearTransferencia(Transferencia transferencia) throws SQLException {
-		transferenciaDAO.insertTransferencia(transferencia);
-		return true;
-	}*/
-	
+	/*
+	 * public boolean crearTransferencia(Transferencia transferencia) throws
+	 * SQLException { transferenciaDAO.insertTransferencia(transferencia); return
+	 * true; }
+	 */
+
 }
